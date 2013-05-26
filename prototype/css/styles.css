@@ -1,5 +1,6 @@
 html, body, .content {
 	height: 100%;
+	overflow: hidden;
 }
 
 .content {
@@ -7,6 +8,11 @@ html, body, .content {
 }
 
 .videoWall {
+	position: absolute;
 	width: 100%;
 	height: 100%;
+}
+
+.video {
+	position: relative;
 }

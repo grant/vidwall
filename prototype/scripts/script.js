@@ -1,17 +1,18 @@
 /*
-var ids = [
-    ["1ZKz2KW87Y4", "b2TUYr99UGw", "X9Hx6nUTSwE"],
-    ["ylLzyHk54Z0", "GMUlhuTkM3w", "vDwzmJpI4io"],
-    ["QP8PyUhx1AU", "ymx_skaZGIE", "MU8B4XDI3Uw"]
-];
+#food
+#psy
+
 */
 
 var numCols = 0;
 var numRows = 0;
-var maxNumCols = 3;
+var maxNumCols = 13;
 var maxNumRows = 3;
 var vidWidth = 600;
 var vidHeight = 400;
+
+var focusRow = 0;
+var focusCol = 0;
 
 // Update a particular HTML element with a new value
 function updateHTML(elmId, value) {
@@ -60,10 +61,14 @@ function updatePlayerInfo2() {
 // This function is automatically called by the player once it loads
 function onYouTubePlayerReady(playerId) {
     var player = document.getElementById(playerId);
-    $(player).width(vidWidth);
-    $(player).height(vidHeight);
+    $(player).width(vidWidth-5);
+    $(player).height(vidHeight-5);
     player.playVideo();
-    player.mute();
+    if (playerId.split(-2, -1) === focusRow && playerId.split(0, -1) === focusCol) {
+        player.unMute();
+    } else {
+        player.mute();
+    }
 }
 
 function loadFromQuery (query) {
@@ -109,6 +114,7 @@ function loadPlayer (videoID, playerId) {
         "&enablejsapi=1" +
         "&version=3" +
         '&rel=0' +
+        '&loop=1&playlist=' + videoID +
         "&playerapiid=" + playerId;
         //  +
         // "&controls=0" +
@@ -137,6 +143,7 @@ function setupVideoWall () {
     numCols = Math.min(Math.floor(videoWallWidth / vidWallMinWidth), maxNumCols);
     numRows = Math.min(Math.floor(videoWallHeight / vidWallMinHeight), maxNumRows);
 
+    console.log(numRows);
     vidWidth = videoWallWidth / numCols;
     vidHeight = videoWallHeight / numRows;
 }
@@ -159,10 +166,39 @@ function rescaleVideos () {
 function _run () {
     setupVideoWall();
     setupDOM();
-    loadFromQuery("harlem shake");
+    var query = window.location.hash;
+    if (!query) {
+        alert('Type #topic at end of url for search.');
+        query = '#psy';
+    }
+    loadFromQuery(query.substring(1));
 
     $(window).resize(function(event) {
         rescaleVideos();
+    });
+
+    $('.videoWall').mousemove(function(data) {
+        var col = Math.floor(data.clientX / vidWidth);
+        var row = Math.floor(data.clientY / vidHeight);
+        if (focusCol !== col || focusRow !== row) {
+            focusCol = col;
+            focusRow = row;
+
+            // mute all
+            var player;
+            for (var i = 0; i < numRows; ++i) {
+                for (var j = 0; j < numCols; ++j) {
+                    player = document.getElementById('video' + i + j);
+                    player.mute();
+                }
+            }
+
+            // unmute one
+            var col = Math.floor(data.clientX / vidWidth);
+            var row = Math.floor(data.clientY / vidHeight);
+            var player = document.getElementById('video' + row + col);
+            player.unMute();
+        }        
     });
 }
 google.load("swfobject", "2.2");
