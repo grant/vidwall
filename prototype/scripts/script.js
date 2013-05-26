@@ -6,13 +6,18 @@
 
 var numCols = 0;
 var numRows = 0;
-var maxNumCols = 13;
-var maxNumRows = 3;
-var vidWidth = 600;
-var vidHeight = 400;
-
+var vidWidth = 0;
+var vidHeight = 0;
 var focusRow = 0;
 var focusCol = 0;
+
+// Const
+// If you put more than 10, then you need to change some of the code below (because cols and rows are assumed single digits)
+var maxNumCols = 10;
+var maxNumRows = 10;
+
+var vidWallMinWidth = 400;
+var vidWallMinHeight = 250;
 
 // Update a particular HTML element with a new value
 function updateHTML(elmId, value) {
@@ -64,7 +69,10 @@ function onYouTubePlayerReady(playerId) {
     $(player).width(vidWidth-5);
     $(player).height(vidHeight-5);
     player.playVideo();
-    if (playerId.split(-2, -1) === focusRow && playerId.split(0, -1) === focusCol) {
+
+    var row = parseInt(playerId.charAt(playerId.length - 2), 10);
+    var col = parseInt(playerId.charAt(playerId.length - 1), 10);
+    if (row === focusRow && col === focusCol) {
         player.unMute();
     } else {
         player.mute();
@@ -88,10 +96,11 @@ function loadFromQuery (query) {
 // The "main method" of this sample. Called when someone clicks "Run".
 function loadPlayers(videoEntries) {
     var videoIds = videoEntries.slice(0).map(getVideoIdFromEntry);
+    var vidnum = 0;
     for (var i = 0; i < numRows; ++i) {
         for (var j = 0; j < numCols; ++j) {
-            var vidnum = (i * (numRows + 1)) + j;
             loadPlayer(videoIds[vidnum], 'video'+i+j);
+            ++vidnum;
         }
     }
 }
@@ -137,13 +146,9 @@ function setupVideoWall () {
     var videoWallWidth = $(".videoWall").width();
     var videoWallHeight = $(".videoWall").height();
 
-    var vidWallMinWidth = 400;
-    var vidWallMinHeight = 250;
-
     numCols = Math.min(Math.floor(videoWallWidth / vidWallMinWidth), maxNumCols);
     numRows = Math.min(Math.floor(videoWallHeight / vidWallMinHeight), maxNumRows);
 
-    console.log(numRows);
     vidWidth = videoWallWidth / numCols;
     vidHeight = videoWallHeight / numRows;
 }
@@ -163,18 +168,43 @@ function rescaleVideos () {
     }
 }
 
-function _run () {
-    setupVideoWall();
-    setupDOM();
+function setupQuery () {
     var query = window.location.hash;
     if (!query) {
         alert('Type #topic at end of url for search.');
         query = '#psy';
+        window.location.hash = query;
     }
+    $('#videoSearch').val(query.substring(1));
     loadFromQuery(query.substring(1));
+}
 
+function submit() {
+    var query = window.location.hash;
+    var search = $('#videoSearch').val();
+    if (search !== query.substring(1)) {
+        window.location.hash = '#' + search;
+        window.location.reload();
+        return false;
+    }
+    // window.location.hash = '#' + $('#videoSearch').val();
+}
+
+function _run () {
+    setupVideoWall();
+    setupDOM();
+    setupQuery();
+
+    // Resize video
     $(window).resize(function(event) {
         rescaleVideos();
+    });
+
+    // Submit search
+    $(window).keypress(function(e) {
+        if (e.keyCode === 13) {
+            return submit();
+        }
     });
 
     $('.videoWall').mousemove(function(data) {
@@ -194,11 +224,12 @@ function _run () {
             }
 
             // unmute one
-            var col = Math.floor(data.clientX / vidWidth);
-            var row = Math.floor(data.clientY / vidHeight);
-            var player = document.getElementById('video' + row + col);
+            var newFocusCol = Math.max(Math.min(Math.floor(data.clientX / vidWidth), numCols), 0);
+            var newFocusRow = Math.max(Math.min(Math.floor(data.clientY / vidHeight), numRows), 0);
+            player = document.getElementById('video' + newFocusRow + newFocusCol);
+
             player.unMute();
-        }        
+        }
     });
 }
 google.load("swfobject", "2.2");
