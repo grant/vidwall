@@ -83,10 +83,10 @@ function loadFromQuery (query) {
 // The "main method" of this sample. Called when someone clicks "Run".
 function loadPlayers(videoEntries) {
     var videoIds = videoEntries.slice(0).map(getVideoIdFromEntry);
-    console.log(videoIds);
     for (var i = 0; i < numRows; ++i) {
         for (var j = 0; j < numCols; ++j) {
-            loadPlayer(videoIds[(i * numRows) + j], 'video'+i+j);
+            var vidnum = (i * (numRows + 1)) + j;
+            loadPlayer(videoIds[vidnum], 'video'+i+j);
         }
     }
 }
@@ -159,7 +159,7 @@ function rescaleVideos () {
 function _run () {
     setupVideoWall();
     setupDOM();
-    loadFromQuery("hurricane katrina");
+    loadFromQuery("harlem shake");
 
     $(window).resize(function(event) {
         rescaleVideos();
