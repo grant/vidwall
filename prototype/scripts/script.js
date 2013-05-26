@@ -202,8 +202,16 @@ function _run () {
 
     // Submit search
     $(window).keypress(function(e) {
-        if (e.keyCode === 13) {
-            return submit();
+        switch (e.keyCode) {
+            // enter
+            case 13:
+                return submit();
+            // / or ?
+            case 47:
+            case 63:
+                $('#videoSearch').focus().select();
+                return false;
+                break;
         }
     });
 
